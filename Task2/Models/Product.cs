@@ -29,6 +29,16 @@ namespace Task2.Models
             this.supplierID = supplierID;
             this.unitInStock = unitInStock;
         }
+        public Product(System.Int32 ID, System.String ProductName, System.Int32 CategoryID, System.Int32 SupplierID,
+            System.Int32 UnitPrice, System.Int32 UnitInStock)
+        {
+            this.productID = ID;
+            this.productName = ProductName;
+            this.categoryID = CategoryID;
+            this.supplierID = SupplierID;
+            this.unitPrice = UnitPrice;
+            this.unitInStock = UnitInStock;
+        }
         public static void createandInsertToDatabaseProduct(string productname,int categoryID,int supplierID,
             int unitPrice,int unitInStock)
         {
@@ -73,6 +83,30 @@ namespace Task2.Models
                 connection.Execute("DROP TABLE Products");
                 connection.Close();
             }
+        }
+        public static List<Product> GetProductsSortedByMostSold()
+        {
+            string connectionString = Settings.getConnectionString();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = @"
+            SELECT p.*
+            FROM Products p
+            INNER JOIN (
+                SELECT ProductId, SUM(Quantity) AS TotalQuantitySold
+                FROM OrdersDetails
+                GROUP BY ProductID
+            ) ps ON p.ID = ps.ProductId
+            ORDER BY ps.TotalQuantitySold ASC";
+
+                List<Product> products = connection.Query<Product>(sql).ToList();
+                connection.Close();
+                return products;
+                
+            }
+           
         }
     }
 }
